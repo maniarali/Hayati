@@ -11,6 +11,7 @@ struct PostCellView: View {
     let cacheService: MediaCacheService
     let playbackService: VideoPlaybackService
     @State private var image: UIImage?
+    @State private var player: AVPlayer?
     @State private var isVisible = false
     
     var body: some View {
@@ -31,10 +32,10 @@ struct PostCellView: View {
                         }
                 }
             case .video:
-                if let player = playbackService.player(for: post) {
+                if let player = player {
                     VideoPlayer(player: player)
                         .disabled(true)
-                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.8)
+                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.7) // 70% screen height
                         .background(GeometryReader { geo in
                             Color.clear
                                 .onAppear { updateVisibility(geo) }
@@ -42,20 +43,26 @@ struct PostCellView: View {
                         })
                 } else {
                     Color.gray.opacity(0.2)
-                        .frame(maxWidth: .infinity, minHeight: 300)
+                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.7)
+                        .overlay(ProgressView())
+                        .task {
+                            player = await playbackService.player(for: post)
+                        }
                 }
             }
         }
-        .background(Color.black)
     }
     
     private func updateVisibility(_ geo: GeometryProxy) {
         let frame = geo.frame(in: .global)
         let screenHeight = UIScreen.main.bounds.height
-        let newVisibility = frame.minY < screenHeight && frame.maxY > 0
-        if newVisibility != isVisible {
-            isVisible = newVisibility
-            if let player = playbackService.player(for: post) {
+        
+        // Video is fully visible if its top (minY) >= 0 and bottom (maxY) <= screenHeight
+        let fullyVisible = frame.minY >= 0 && frame.maxY <= screenHeight
+        
+        if fullyVisible != isVisible {
+            isVisible = fullyVisible
+            if let player = player {
                 isVisible ? playbackService.play(player) : playbackService.pause(player)
             }
         }

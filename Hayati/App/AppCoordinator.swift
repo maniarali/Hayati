@@ -12,7 +12,7 @@ class AppCoordinator {
         let useCase = FetchPostsUseCaseImpl(repository: repository)
         let viewModel = FeedViewModel(fetchPostsUseCase: useCase)
         let cacheService = MediaCacheService()
-        let playbackService = VideoPlaybackService()
+        let playbackService = VideoPlaybackService(cacheService: cacheService)
         return FeedView(viewModel: viewModel, cacheService: cacheService, playbackService: playbackService)
     }
 }

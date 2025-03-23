@@ -39,9 +39,9 @@ class ImgurPostRepository: PostRepository {
             .decode(type: ImgurResponse.self, decoder: JSONDecoder())
             .map { response -> [Post] in
                 response.data.compactMap { item -> Post? in
-                    guard let image = item.images?.first,
-                          let url = URL(string: image.link) else { return nil }
-                    let type: MediaType = image.link.hasSuffix(".mp4") ? .video : .photo
+                    guard let media = item.images?.first,
+                          let url = URL(string: media.link) else { return nil }
+                    let type: MediaType = media.type == "video/mp4" ? .video : .photo
                     return Post(id: item.id, media: Media(type: type, url: url))
                 }
             }

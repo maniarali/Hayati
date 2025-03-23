@@ -17,17 +17,15 @@ struct FeedView: View {
                 ProgressView("Loading Hayati...")
                     .progressViewStyle(CircularProgressViewStyle())
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black)
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(viewModel.posts.enumerated()), id: \.element.id) { index, post in
-                            PostCellView(post: post, cacheService: cacheService, playbackService: playbackService)
-                                .frame(maxWidth: .infinity, minHeight: 300)
-                                .onAppear {
-                                    viewModel.loadMorePostsIfNeeded(currentIndex: index)
-                                }
-                            if index < viewModel.posts.count - 1 {
+                            VStack(spacing: 0) {
+                                PostCellView(post: post, cacheService: cacheService, playbackService: playbackService)
+                                    .onAppear {
+                                        viewModel.loadMorePostsIfNeeded(currentIndex: index)
+                                    }
                                 Rectangle()
                                     .fill(Color.gray.opacity(0.2))
                                     .frame(height: 8)
@@ -39,7 +37,6 @@ struct FeedView: View {
                         }
                     }
                 }
-                .background(Color.black)
                 .navigationTitle("Hayati")
                 .navigationBarTitleDisplayMode(.inline)
                 .onDisappear {
@@ -55,6 +52,6 @@ struct FeedView: View {
     let useCase = FetchPostsUseCaseImpl(repository: repository)
     let viewModel = FeedViewModel(fetchPostsUseCase: useCase)
     let cacheService = MediaCacheService()
-    let playbackService = VideoPlaybackService()
+    let playbackService = VideoPlaybackService(cacheService: cacheService)
     return FeedView(viewModel: viewModel, cacheService: cacheService, playbackService: playbackService)
 }
