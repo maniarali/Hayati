@@ -23,6 +23,7 @@ struct FeedView: View {
                         ForEach(Array(viewModel.posts.enumerated()), id: \.element.id) { index, post in
                             VStack(spacing: 0) {
                                 PostCellView(post: post, cacheService: cacheService, playbackService: playbackService)
+                                    .frame(maxWidth: .infinity, minHeight: 100)
                                     .onAppear {
                                         viewModel.loadMorePostsIfNeeded(currentIndex: index)
                                     }
