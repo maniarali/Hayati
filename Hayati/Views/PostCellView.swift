@@ -11,6 +11,7 @@ struct PostCellView: View {
     let cacheService: MediaCacheService
     let playbackService: VideoPlaybackService
     @State private var image: UIImage?
+    @State private var player: AVPlayer?
     @State private var isVisible = false
     
     var body: some View {
@@ -31,10 +32,10 @@ struct PostCellView: View {
                         }
                 }
             case .video:
-                if let player = playbackService.player(for: post) {
+                if let player = player {
                     VideoPlayer(player: player)
                         .disabled(true)
-                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.8)
+                        .frame(maxWidth: .infinity, minHeight: 300)
                         .background(GeometryReader { geo in
                             Color.clear
                                 .onAppear { updateVisibility(geo) }
@@ -43,6 +44,10 @@ struct PostCellView: View {
                 } else {
                     Color.gray.opacity(0.2)
                         .frame(maxWidth: .infinity, minHeight: 300)
+                        .overlay(ProgressView())
+                        .task {
+                            player = await playbackService.player(for: post)
+                        }
                 }
             }
         }
@@ -55,7 +60,7 @@ struct PostCellView: View {
         let newVisibility = frame.minY < screenHeight && frame.maxY > 0
         if newVisibility != isVisible {
             isVisible = newVisibility
-            if let player = playbackService.player(for: post) {
+            if let player = player {
                 isVisible ? playbackService.play(player) : playbackService.pause(player)
             }
         }

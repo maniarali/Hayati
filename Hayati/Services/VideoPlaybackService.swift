@@ -9,28 +9,29 @@ import Foundation
 
 class VideoPlaybackService {
     private var players: [String: AVPlayer] = [:]
-    private let session: URLSession
+    private let cacheService: MediaCacheService
     
-    init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 15
-        config.timeoutIntervalForResource = 30
-        self.session = URLSession(configuration: config)
+    init(cacheService: MediaCacheService) {
+        self.cacheService = cacheService
     }
     
-    func player(for post: Post) -> AVPlayer? {
+    func player(for post: Post) async -> AVPlayer? {
         guard post.media.type == .video else { return nil }
         if let existingPlayer = players[post.id] {
-            existingPlayer.seek(to: .zero)
+            await existingPlayer.seek(to: .zero)
             return existingPlayer
         }
-        let playerItem = AVPlayerItem(url: post.media.url)
-        let player = AVPlayer(playerItem: playerItem)
-        player.isMuted = true
-        players[post.id] = player
-        preload(player, url: post.media.url)
-        print("Created player for \(post.id): \(post.media.url.lastPathComponent)")
-        return player
+        
+        do {
+            let localURL = try await cacheService.loadVideo(from: post.media.url)
+            let player = AVPlayer(url: localURL)
+            players[post.id] = player
+            print("Created player for \(post.id): \(localURL.lastPathComponent)")
+            return player
+        } catch {
+            print("Failed to load video for \(post.id): \(error)")
+            return nil
+        }
     }
     
     func play(_ player: AVPlayer) {
@@ -42,23 +43,6 @@ class VideoPlaybackService {
     func pause(_ player: AVPlayer) {
         player.pause()
         print("Paused \(player.currentItem?.asset ?? nil)")
-    }
-    
-    private func preload(_ player: AVPlayer, url: URL) {
-        Task(priority: .high) {
-            do {
-                let isPlayable = try await player.currentItem?.asset.load(.isPlayable) ?? false
-                if isPlayable {
-                    print("Preloaded \(url)")
-                } else {
-                    print("Asset not playable: \(url)")
-                    players.removeValue(forKey: url.lastPathComponent)
-                }
-            } catch {
-                print("Preload error for \(url): \(error)")
-                players.removeValue(forKey: url.lastPathComponent)
-            }
-        }
     }
     
     func cleanup() {
