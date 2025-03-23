@@ -26,10 +26,8 @@ class VideoPlaybackService {
             let localURL = try await cacheService.loadVideo(from: post.media.url)
             let player = AVPlayer(url: localURL)
             players[post.id] = player
-            print("Created player for \(post.id): \(localURL.lastPathComponent)")
             return player
         } catch {
-            print("Failed to load video for \(post.id): \(error)")
             return nil
         }
     }
@@ -37,17 +35,14 @@ class VideoPlaybackService {
     func play(_ player: AVPlayer) {
         player.seek(to: .zero)
         player.playImmediately(atRate: 1.0)
-        print("Playing \(player.currentItem?.asset ?? nil)")
     }
     
     func pause(_ player: AVPlayer) {
         player.pause()
-        print("Paused \(player.currentItem?.asset ?? nil)")
     }
     
     func cleanup() {
         players.values.forEach { $0.pause() }
         players.removeAll()
-        print("Cleaned up all players")
     }
 }

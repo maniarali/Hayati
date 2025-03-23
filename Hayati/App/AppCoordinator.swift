@@ -8,11 +8,13 @@ import SwiftUI
 
 class AppCoordinator {
     func start() -> some View {
-        let repository = ImgurPostRepository()
+        let networkService = NetworkServiceImpl()
+        let cacheService = CacheServiceImpl()
+        let repository = ImgurPostRepository(networkService: networkService, cacheService: cacheService)
         let useCase = FetchPostsUseCaseImpl(repository: repository)
         let viewModel = FeedViewModel(fetchPostsUseCase: useCase)
-        let cacheService = MediaCacheService()
-        let playbackService = VideoPlaybackService(cacheService: cacheService)
-        return FeedView(viewModel: viewModel, cacheService: cacheService, playbackService: playbackService)
+        let mediaCacheService = MediaCacheService()
+        let playbackService = VideoPlaybackService(cacheService: mediaCacheService)
+        return FeedView(viewModel: viewModel, cacheService: mediaCacheService, playbackService: playbackService)
     }
 }
