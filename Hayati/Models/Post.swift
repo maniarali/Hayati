@@ -6,18 +6,17 @@
 //
 import Foundation
 
-enum MediaType {
+enum MediaType: String, Codable {
     case photo
     case video
 }
 
-struct Media {
+struct Media: Codable {
     let type: MediaType
     let url: URL
 }
 
-struct Post: Identifiable {
-    let id: UUID = UUID()
-    let media: [Media]
-    let caption: String
+struct Post: Identifiable, Codable {
+    let id: String
+    let media: Media
 }

@@ -7,7 +7,7 @@
 import Combine
 
 protocol FetchPostsUseCase {
-    func execute() -> AnyPublisher<[Post], Error>
+    func execute(page: Int) -> AnyPublisher<[Post], Error>
 }
 
 class FetchPostsUseCaseImpl: FetchPostsUseCase {
@@ -17,7 +17,7 @@ class FetchPostsUseCaseImpl: FetchPostsUseCase {
         self.repository = repository
     }
     
-    func execute() -> AnyPublisher<[Post], Error> {
-        repository.fetchPosts()
+    func execute(page: Int) -> AnyPublisher<[Post], Error> {
+        repository.fetchPosts(page: page)
     }
 }

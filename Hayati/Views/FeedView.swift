@@ -13,16 +13,48 @@ struct FeedView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVStack(spacing: 20) {
-                    ForEach(viewModel.posts) { post in
-                        PostCellView(post: post, cacheService: cacheService, playbackService: playbackService)
-                            .frame(maxWidth: .infinity)
+            if viewModel.isLoadingInitial {
+                ProgressView("Loading Hayati...")
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(viewModel.posts.enumerated()), id: \.element.id) { index, post in
+                            PostCellView(post: post, cacheService: cacheService, playbackService: playbackService)
+                                .frame(maxWidth: .infinity, minHeight: 300)
+                                .onAppear {
+                                    viewModel.loadMorePostsIfNeeded(currentIndex: index)
+                                }
+                            if index < viewModel.posts.count - 1 {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(height: 8)
+                            }
+                        }
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .padding()
+                        }
                     }
                 }
-                .padding()
+                .background(Color.black)
+                .navigationTitle("Hayati")
+                .navigationBarTitleDisplayMode(.inline)
+                .onDisappear {
+                    playbackService.cleanup()
+                }
             }
-            .navigationTitle("Hayati")
         }
     }
+}
+
+#Preview {
+    let repository = ImgurPostRepository()
+    let useCase = FetchPostsUseCaseImpl(repository: repository)
+    let viewModel = FeedViewModel(fetchPostsUseCase: useCase)
+    let cacheService = MediaCacheService()
+    let playbackService = VideoPlaybackService()
+    return FeedView(viewModel: viewModel, cacheService: cacheService, playbackService: playbackService)
 }
