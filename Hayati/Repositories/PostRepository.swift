@@ -8,5 +8,5 @@
 import Combine
 
 protocol PostRepository {
-    func fetchPosts() -> AnyPublisher<[Post], Error>
+    func fetchPosts(page: Int) -> AnyPublisher<[Post], Error>
 }

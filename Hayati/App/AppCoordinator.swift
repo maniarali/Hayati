@@ -8,7 +8,7 @@ import SwiftUI
 
 class AppCoordinator {
     func start() -> some View {
-        let repository = LocalPostRepository()
+        let repository = ImgurPostRepository()
         let useCase = FetchPostsUseCaseImpl(repository: repository)
         let viewModel = FeedViewModel(fetchPostsUseCase: useCase)
         let cacheService = MediaCacheService()
